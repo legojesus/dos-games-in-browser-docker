@@ -1,17 +1,22 @@
-FROM debian:buster
+FROM debian:bookworm-slim
 
-ENV LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LC_ALL=C.UTF-8 DISPLAY=:0.0
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    DISPLAY=:0.0 \
+    DISPLAY_SETTINGS=1024x768x16
 
-# Install dependencies.
+# Install dependencies
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends \
       bzip2 \
+      ca-certificates \
       gstreamer1.0-plugins-good \
       gstreamer1.0-pulseaudio \
       gstreamer1.0-tools \
       libglu1-mesa \
       libgtk2.0-0 \
-      libncursesw5 \
+      libncursesw6 \
       libopenal1 \
       libsdl-image1.2 \
       libsdl-ttf2.0-0 \
@@ -26,30 +31,22 @@ RUN apt-get update \
       xvfb \
  && rm -rf /var/lib/apt/lists/*
 
-# Install Wine.
+# Install Wine
 RUN dpkg --add-architecture i386 \
-    && apt-get update -y && apt-get install -y wine
+ && apt-get update -y \
+ && DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends \
+      wine \
+      wine32 \
+      wine64 \
+ && rm -rf /var/lib/apt/lists/*
 
 # Configure pulseaudio.
 ADD bin/default.pa /etc/pulse/
 ADD bin/client.conf /etc/pulse
 
-# Force vnc_lite.html to be used for novnc, to avoid having the directory listing page.
-# Additionally, turn off the control bar. Finally, add a hook to start audio on the host where the container is found via its IP address.
-# If you use "localhost" instead of IP address, then sound won't work anywhere but on the host. If you use an IP address, it will work on every computer that enters the website (but make sure to open port 8081 on the host's firewall for incoming/outgoing traffic). 
-ADD bin/webaudio.js /usr/share/novnc/core/
-RUN ln -s /usr/share/novnc/vnc_lite.html /usr/share/novnc/index.html \
- && sed -i 's/display:flex/display:none/' /usr/share/novnc/app/styles/lite.css \
- && sed -i "/import RFB/a \
-      import WebAudio from './core/webaudio.js'" \
-    /usr/share/novnc/vnc_lite.html \
- && sed -i "/function connected(e)/a \
-      var wa = new WebAudio('ws://localhost:8081/websockify'); \
-      document.getElementsByTagName('canvas')[0].addEventListener('keydown', e => { wa.start(); });" \
-    /usr/share/novnc/vnc_lite.html \
- && sed -i "/\/body>/a \
-      <footer style=\"text-align:center; background-color:grey;\">Enlarge game's screen by using the browser's zoom-in (CTRL and '+' key). To activate sound, click on the game's screen and press any key on the keyboard.</footer>" \
-    /usr/share/novnc/vnc_lite.html
+# Setup noVNC index (websockify handles VNC connections)
+RUN ln -sf /usr/share/novnc/vnc.html /usr/share/novnc/index.html 2>/dev/null || \
+    ln -sf /usr/share/novnc/vnc_lite.html /usr/share/novnc/index.html 2>/dev/null || true
 
 # Configure supervisord.
 COPY bin/supervisord.conf /etc/supervisor/supervisord.conf
@@ -61,7 +58,6 @@ RUN groupadd heroes \
 WORKDIR /home/heroes
 
 # Install Heroes of Might & Magic 3 in Wine. 
-ADD bin/homm3.reg /home/heroes/bin/homm3.reg
 ADD bin/start-h3.sh /home/heroes/bin/start-h3.sh
 
 COPY ["./HoMM3", "/home/heroes/.wine/drive_c/Program Files (x86)/3DO/Heroes III Demo"]

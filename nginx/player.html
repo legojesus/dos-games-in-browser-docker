@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DOS Games Arcade - Player</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <script src="https://js-dos.com/v7/build/releases/latest/js-dos/js-dos.js"></script>
+    <link href="https://js-dos.com/v7/build/releases/latest/js-dos/js-dos.css" rel="stylesheet">
+    <style>
+        :root {
+            --neon-pink: #ff00ff;
+            --neon-cyan: #00ffff;
+            --neon-green: #39ff14;
+            --dark-bg: #0a0a0a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: var(--dark-bg);
+            font-family: 'VT323', monospace;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid var(--neon-cyan);
+        }
+
+        .game-title {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            color: var(--neon-pink);
+            text-transform: uppercase;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.5rem;
+            text-decoration: none;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            background: var(--neon-cyan);
+            color: var(--dark-bg);
+            box-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        #jsdos {
+            flex: 1;
+            width: 100%;
+            background: #000;
+        }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 1rem;
+        }
+
+        .loading-text {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem;
+            color: var(--neon-green);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--dark-bg);
+            border-top: 4px solid var(--neon-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 1rem;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .error-icon {
+            font-size: 4rem;
+        }
+
+        .error-title {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem;
+            color: #ff4444;
+        }
+
+        .error-message {
+            font-size: 1.2rem;
+            color: #888;
+            max-width: 500px;
+        }
+
+        /* Fullscreen button styling */
+        .fullscreen-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.5rem;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .fullscreen-btn:hover {
+            background: var(--neon-green);
+            color: var(--dark-bg);
+            box-shadow: 0 0 20px var(--neon-green);
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/" class="back-btn">← Back to Arcade</a>
+            <span class="game-title" id="game-title">Loading...</span>
+            <div class="header-controls">
+                <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+            </div>
+        </div>
+        <div id="jsdos">
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Loading Game...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get URL parameters
+        const params = new URLSearchParams(window.location.search);
+        const bundleUrl = params.get('bundle');
+        const gameName = params.get('name') || 'DOS Game';
+
+        // Update title
+        document.getElementById('game-title').textContent = gameName;
+        document.title = `${gameName} - DOS Games Arcade`;
+
+        function showError(message) {
+            document.getElementById('jsdos').innerHTML = `
+                <div class="error">
+                    <div class="error-icon">😵</div>
+                    <div class="error-title">Failed to Load Game</div>
+                    <div class="error-message">${message}</div>
+                    <a href="/" class="back-btn" style="margin-top: 1rem;">← Back to Arcade</a>
+                </div>
+            `;
+        }
+
+        function toggleFullscreen() {
+            const jsdosEl = document.getElementById('jsdos');
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                jsdosEl.requestFullscreen().catch(err => {
+                    console.log('Fullscreen error:', err);
+                });
+            }
+        }
+
+        // Load the game
+        if (!bundleUrl) {
+            showError('No game specified. Please select a game from the arcade.');
+        } else {
+            // Initialize js-dos
+            emulators.pathPrefix = "https://js-dos.com/v7/build/releases/latest/js-dos/";
+
+            Dos(document.getElementById("jsdos"), {
+                style: "none"
+            }).run(bundleUrl).then((ci) => {
+                document.getElementById('loading')?.remove();
+                console.log('Game loaded successfully');
+            }).catch((err) => {
+                console.error('Failed to load game:', err);
+                showError(`Could not load the game bundle. The game might not be available or there was a network error.<br><br>Error: ${err.message || err}`);
+            });
+        }
+
+        // Keyboard shortcut for fullscreen (F11)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F11') {
+                e.preventDefault();
+                toggleFullscreen();
+            }
+        });
+    </script>
+</body>
+</html>

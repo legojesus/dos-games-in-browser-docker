@@ -1,5 +1,149 @@
+name: dos-games-website
+
 services:
-    game:
-        build: .
-        ports:
-            - 80:8080
+  aladdin:
+    build:
+      context: ./aladdin
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  chess:
+    build:
+      context: ./chess
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  doom:
+    build:
+      context: ./doom
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  doomii:
+    build:
+      context: ./doomii
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  duke3d:
+    build:
+      context: ./duke3d
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  earthwormjim:
+    build:
+      context: ./earthwormjim
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  goldenaxe:
+    build:
+      context: ./goldenaxe
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  gta:
+    build:
+      context: ./gta
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  homm3:
+    build:
+      context: ./homm3
+      dockerfile: Dockerfile
+    environment:
+      - DISPLAY_SETTINGS=1024x768x16
+    volumes:
+      - ./homm3/HoMM3/Games:/home/heroes/.wine/drive_c/Program Files (x86)/3DO/Heroes III Demo/Games
+    restart: unless-stopped
+
+  junglebook:
+    build:
+      context: ./junglebook
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  lemmings:
+    build:
+      context: ./lemmings
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  lionking:
+    build:
+      context: ./lionking
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  lostvikings:
+    build:
+      context: ./lostvikings
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  mortalkombat:
+    build:
+      context: ./mortalkombat
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  pacman:
+    build:
+      context: ./pacman
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  princeofpersia:
+    build:
+      context: ./princeofpersia
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  redalert:
+    build:
+      context: ./redalert
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  spaceinvaders:
+    build:
+      context: ./spaceinvaders
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  wolfenstein:
+    build:
+      context: ./wolfenstein
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    depends_on:
+      - aladdin
+      - chess
+      - doom
+      - doomii
+      - duke3d
+      - earthwormjim
+      - goldenaxe
+      - gta
+      - homm3
+      - junglebook
+      - lemmings
+      - lionking
+      - lostvikings
+      - mortalkombat
+      - pacman
+      - princeofpersia
+      - redalert
+      - spaceinvaders
+      - wolfenstein
+

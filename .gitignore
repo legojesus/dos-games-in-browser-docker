@@ -1,27 +1,55 @@
-# Compiled class file
-*.class
+# ===================
+# Game Folders
+# ===================
 
-# Log file
+# DOS game folders (created by ./create_game.sh)
+# Users should run create_game.sh to add games after cloning
+aladdin/
+chess/
+doom/
+doomii/
+duke3d/
+earthwormjim/
+goldenaxe/
+gta/
+junglebook/
+lemmings/
+lionking/
+lostvikings/
+mortalkombat/
+pacman/
+princeofpersia/
+redalert/
+spaceinvaders/
+wolfenstein/
+
+# HoMM3 game files (user-provided)
+homm3/HoMM3/
+
+# Catch-all for any other game folders' large files
+*/_site/bundle.jsdos
+*/node_modules/
+
+# ===================
+# IDE & OS
+# ===================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ===================
+# Logs
+# ===================
 *.log
+npm-debug.log*
 
-# BlueJ files
-*.ctxt
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
+# ===================
+# Archives
+# ===================
 *.zip
 *.tar.gz
 *.rar
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
-
-# npm modules
-./*
+*.7z

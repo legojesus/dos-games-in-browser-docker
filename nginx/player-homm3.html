@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Heroes of Might and Magic III - DOS Games Arcade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@novnc/novnc@1.4.0/core/rfb.js" type="module"></script>
+    <style>
+        :root {
+            --neon-pink: #ff00ff;
+            --neon-cyan: #00ffff;
+            --neon-green: #39ff14;
+            --dark-bg: #0a0a0a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: var(--dark-bg);
+            font-family: 'VT323', monospace;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid var(--neon-cyan);
+        }
+
+        .game-title {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            color: var(--neon-pink);
+            text-transform: uppercase;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.5rem;
+            text-decoration: none;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            background: var(--neon-cyan);
+            color: var(--dark-bg);
+            box-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        #game-container {
+            flex: 1;
+            width: 100%;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #vnc-screen {
+            width: 100%;
+            height: 100%;
+        }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 1rem;
+        }
+
+        .loading-text {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem;
+            color: var(--neon-green);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--dark-bg);
+            border-top: 4px solid var(--neon-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .fullscreen-btn, .sound-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.5rem;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .fullscreen-btn:hover, .sound-btn:hover {
+            background: var(--neon-green);
+            color: var(--dark-bg);
+            box-shadow: 0 0 20px var(--neon-green);
+        }
+
+        .sound-btn.active {
+            background: var(--neon-green);
+            color: var(--dark-bg);
+        }
+
+        .info-bar {
+            padding: 0.5rem 1rem;
+            background: rgba(0, 0, 0, 0.9);
+            border-top: 1px solid #333;
+            font-size: 0.9rem;
+            color: #888;
+            text-align: center;
+        }
+
+        .info-bar span {
+            color: var(--neon-cyan);
+        }
+
+        /* Mobile warning */
+        .mobile-warning {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 2rem;
+            text-align: center;
+            gap: 1.5rem;
+        }
+
+        .mobile-warning-icon {
+            font-size: 4rem;
+        }
+
+        .mobile-warning h2 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.2rem;
+            color: var(--neon-pink);
+            line-height: 1.8;
+        }
+
+        .mobile-warning p {
+            color: #888;
+            font-size: 1.3rem;
+            max-width: 400px;
+            line-height: 1.6;
+        }
+
+        .mobile-warning .back-home {
+            margin-top: 1rem;
+            padding: 1rem 2rem;
+            background: var(--neon-cyan);
+            border: none;
+            border-radius: 8px;
+            color: var(--dark-bg);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7rem;
+            text-decoration: none;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-warning .back-home:hover {
+            box-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        @media (max-width: 768px), (pointer: coarse) {
+            .mobile-warning {
+                display: flex;
+            }
+            .loading, #vnc-screen, .info-bar, .header-controls {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/" class="back-btn">Back to Arcade</a>
+            <span class="game-title">Heroes of Might and Magic III</span>
+            <div class="header-controls">
+                <button class="sound-btn" id="sound-btn" onclick="toggleSound()">Sound: OFF</button>
+                <button class="fullscreen-btn" onclick="toggleFullscreen()">Fullscreen</button>
+            </div>
+        </div>
+        <div id="game-container">
+            <div class="mobile-warning">
+                <span class="mobile-warning-icon">🖥️</span>
+                <h2>Desktop Only</h2>
+                <p>Heroes of Might and Magic III requires a mouse and keyboard to play. Please visit this page on a desktop computer.</p>
+                <a href="/" class="back-home">Browse Other Games</a>
+            </div>
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Connecting to game...</div>
+                <p style="color: #666; margin-top: 1rem;">Please wait 10-20 seconds for Wine to initialize</p>
+            </div>
+            <div id="vnc-screen" style="display: none;"></div>
+        </div>
+        <div class="info-bar">
+            <span>Tip:</span> Use browser zoom (<span>Ctrl +/-</span>) to resize. Click game and press any key to enable sound.
+        </div>
+    </div>
+
+    <script type="module">
+        import RFB from 'https://cdn.jsdelivr.net/npm/@novnc/novnc@1.4.0/core/rfb.js';
+
+        // Low-latency PCM audio streaming with fallback for non-HTTPS
+        class WebAudio {
+            constructor(url) {
+                this.url = url;
+                this.connected = false;
+                this.audioContext = null;
+                this.workletNode = null;
+                this.scriptNode = null;
+                this.socket = null;
+                this.sampleRate = 48000;
+                this.channels = 2;
+                this.useWorklet = false;
+
+                // Ring buffer for ScriptProcessorNode fallback
+                this.bufferSize = 48000;
+                this.buffer = new Float32Array(this.bufferSize);
+                this.writePos = 0;
+                this.readPos = 0;
+                this.samplesAvailable = 0;
+                this.targetBuffer = 9600;
+                this.started = false;
+            }
+
+            async start() {
+                if (this.connected) return;
+
+                try {
+                    // Create AudioContext with matching sample rate
+                    this.audioContext = new AudioContext({ sampleRate: this.sampleRate });
+
+                    // Resume AudioContext (required for Chrome autoplay policy)
+                    if (this.audioContext.state === 'suspended') {
+                        await this.audioContext.resume();
+                    }
+                    console.log('AudioContext state:', this.audioContext.state);
+
+                    // Check if AudioWorklet is available (requires HTTPS or localhost)
+                    if (this.audioContext.audioWorklet && window.isSecureContext) {
+                        await this.initWorklet();
+                    } else {
+                        console.log('AudioWorklet not available (requires HTTPS), using ScriptProcessorNode fallback');
+                        this.initScriptProcessor();
+                    }
+
+                    // Connect WebSocket
+                    this.wsConnect();
+
+                } catch (err) {
+                    console.error('Audio init error:', err);
+                    // Try fallback if worklet failed
+                    if (this.useWorklet) {
+                        console.log('Falling back to ScriptProcessorNode');
+                        this.useWorklet = false;
+                        this.initScriptProcessor();
+                        this.wsConnect();
+                    }
+                }
+            }
+
+            async initWorklet() {
+                const workletCode = `
+                    class PCMPlayerProcessor extends AudioWorkletProcessor {
+                        constructor() {
+                            super();
+                            this.bufferSize = 48000;
+                            this.buffer = new Float32Array(this.bufferSize);
+                            this.writePos = 0;
+                            this.readPos = 0;
+                            this.samplesAvailable = 0;
+                            this.targetBuffer = 9600;
+                            this.started = false;
+
+                            this.port.onmessage = (e) => {
+                                if (e.data.samples) {
+                                    this.addSamples(e.data.samples);
+                                }
+                            };
+                        }
+
+                        addSamples(samples) {
+                            for (let i = 0; i < samples.length; i++) {
+                                this.buffer[this.writePos] = samples[i];
+                                this.writePos = (this.writePos + 1) % this.bufferSize;
+                            }
+                            this.samplesAvailable = Math.min(this.samplesAvailable + samples.length, this.bufferSize);
+                            if (!this.started && this.samplesAvailable >= this.targetBuffer) {
+                                this.started = true;
+                            }
+                        }
+
+                        process(inputs, outputs, parameters) {
+                            const output = outputs[0];
+                            if (!output || output.length === 0) return true;
+
+                            const left = output[0];
+                            const right = output.length > 1 ? output[1] : null;
+                            const frameCount = left ? left.length : 0;
+
+                            if (!this.started) {
+                                for (let i = 0; i < frameCount; i++) {
+                                    left[i] = 0;
+                                    if (right) right[i] = 0;
+                                }
+                                return true;
+                            }
+
+                            if (this.samplesAvailable > this.bufferSize * 0.8) {
+                                const skip = Math.floor((this.samplesAvailable - this.targetBuffer) / 2) * 2;
+                                this.readPos = (this.readPos + skip) % this.bufferSize;
+                                this.samplesAvailable -= skip;
+                            }
+
+                            for (let i = 0; i < frameCount; i++) {
+                                if (this.samplesAvailable >= 2) {
+                                    left[i] = this.buffer[this.readPos];
+                                    this.readPos = (this.readPos + 1) % this.bufferSize;
+                                    if (right) right[i] = this.buffer[this.readPos];
+                                    this.readPos = (this.readPos + 1) % this.bufferSize;
+                                    this.samplesAvailable -= 2;
+                                } else {
+                                    left[i] = 0;
+                                    if (right) right[i] = 0;
+                                }
+                            }
+                            return true;
+                        }
+                    }
+                    registerProcessor('pcm-player-processor', PCMPlayerProcessor);
+                `;
+
+                const blob = new Blob([workletCode], { type: 'application/javascript' });
+                const workletUrl = URL.createObjectURL(blob);
+
+                await this.audioContext.audioWorklet.addModule(workletUrl);
+                URL.revokeObjectURL(workletUrl);
+
+                this.workletNode = new AudioWorkletNode(this.audioContext, 'pcm-player-processor', {
+                    outputChannelCount: [2]
+                });
+                this.workletNode.connect(this.audioContext.destination);
+                this.useWorklet = true;
+                console.log('AudioWorklet connected');
+            }
+
+            initScriptProcessor() {
+                // Fallback using deprecated ScriptProcessorNode (works over HTTP)
+                this.scriptNode = this.audioContext.createScriptProcessor(4096, 0, 2);
+                this.scriptNode.onaudioprocess = (e) => {
+                    const left = e.outputBuffer.getChannelData(0);
+                    const right = e.outputBuffer.getChannelData(1);
+                    const frameCount = left.length;
+
+                    if (!this.started) {
+                        for (let i = 0; i < frameCount; i++) {
+                            left[i] = 0;
+                            right[i] = 0;
+                        }
+                        return;
+                    }
+
+                    // Skip ahead if buffer is too full
+                    if (this.samplesAvailable > this.bufferSize * 0.8) {
+                        const skip = Math.floor((this.samplesAvailable - this.targetBuffer) / 2) * 2;
+                        this.readPos = (this.readPos + skip) % this.bufferSize;
+                        this.samplesAvailable -= skip;
+                    }
+
+                    for (let i = 0; i < frameCount; i++) {
+                        if (this.samplesAvailable >= 2) {
+                            left[i] = this.buffer[this.readPos];
+                            this.readPos = (this.readPos + 1) % this.bufferSize;
+                            right[i] = this.buffer[this.readPos];
+                            this.readPos = (this.readPos + 1) % this.bufferSize;
+                            this.samplesAvailable -= 2;
+                        } else {
+                            left[i] = 0;
+                            right[i] = 0;
+                        }
+                    }
+                };
+                this.scriptNode.connect(this.audioContext.destination);
+                console.log('ScriptProcessorNode connected (HTTP fallback)');
+            }
+
+            addSamples(samples) {
+                // Used by ScriptProcessorNode fallback
+                for (let i = 0; i < samples.length; i++) {
+                    this.buffer[this.writePos] = samples[i];
+                    this.writePos = (this.writePos + 1) % this.bufferSize;
+                }
+                this.samplesAvailable = Math.min(this.samplesAvailable + samples.length, this.bufferSize);
+                if (!this.started && this.samplesAvailable >= this.targetBuffer) {
+                    this.started = true;
+                }
+            }
+
+            wsConnect() {
+                if (this.socket) this.socket.close();
+                this.socket = new WebSocket(this.url, ['binary', 'base64']);
+                this.socket.binaryType = 'arraybuffer';
+                this.socket.addEventListener('open', () => {
+                    console.log('Audio WebSocket connected');
+                    this.connected = true;
+                });
+                this.socket.addEventListener('message', e => this.onAudioData(e.data), false);
+                this.socket.addEventListener('close', () => this.onDisconnect());
+                this.socket.addEventListener('error', (e) => {
+                    console.error('Audio WebSocket error:', e);
+                    this.onDisconnect();
+                });
+            }
+
+            onAudioData(data) {
+                // Convert S16LE PCM to Float32
+                const int16 = new Int16Array(data);
+                const float32 = new Float32Array(int16.length);
+                for (let i = 0; i < int16.length; i++) {
+                    float32[i] = int16[i] / 32768.0;
+                }
+
+                // Debug: log first packet info
+                if (!this.loggedFirstPacket) {
+                    console.log('First audio packet:', int16.length, 'samples, first values:', int16[0], int16[1], int16[2]);
+                    this.loggedFirstPacket = true;
+                }
+
+                // Route to appropriate handler
+                if (this.useWorklet && this.workletNode) {
+                    this.workletNode.port.postMessage({ samples: float32 });
+                } else if (this.scriptNode) {
+                    this.addSamples(float32);
+                }
+            }
+
+            onDisconnect() {
+                console.log('Audio disconnected, reconnecting...');
+                this.connected = false;
+                setTimeout(() => {
+                    if (!this.connected && this.audioContext) {
+                        this.wsConnect();
+                    }
+                }, 1000);
+            }
+
+            stop() {
+                if (this.socket) {
+                    this.socket.close();
+                    this.socket = null;
+                }
+                if (this.workletNode) {
+                    this.workletNode.disconnect();
+                    this.workletNode = null;
+                }
+                if (this.scriptNode) {
+                    this.scriptNode.disconnect();
+                    this.scriptNode = null;
+                }
+                if (this.audioContext) {
+                    this.audioContext.close();
+                    this.audioContext = null;
+                }
+                this.connected = false;
+                this.started = false;
+                this.samplesAvailable = 0;
+                this.writePos = 0;
+                this.readPos = 0;
+            }
+        }
+
+        // Build WebSocket URL for VNC
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const vncUrl = `${wsProtocol}//${window.location.host}/homm3-vnc/websockify`;
+        const audioUrl = `${wsProtocol}//${window.location.host}/homm3-audio/websockify`;
+
+        let rfb = null;
+        let audioEnabled = false;
+        let webAudio = null;
+
+        // Connect to VNC
+        function connectVNC() {
+            try {
+                const vncScreen = document.getElementById('vnc-screen');
+                rfb = new RFB(vncScreen, vncUrl);
+
+                rfb.addEventListener('connect', () => {
+                    console.log('VNC connected');
+                    document.getElementById('loading').style.display = 'none';
+                    vncScreen.style.display = 'block';
+                });
+
+                rfb.addEventListener('disconnect', (e) => {
+                    console.log('VNC disconnected:', e.detail);
+                    if (!e.detail.clean) {
+                        setTimeout(connectVNC, 2000);
+                    }
+                });
+
+                rfb.scaleViewport = true;
+                rfb.resizeSession = false;
+            } catch (err) {
+                console.error('VNC connection error:', err);
+                setTimeout(connectVNC, 2000);
+            }
+        }
+
+        // Toggle sound
+        window.toggleSound = async function() {
+            const btn = document.getElementById('sound-btn');
+            if (!audioEnabled) {
+                webAudio = new WebAudio(audioUrl);
+                await webAudio.start();
+                audioEnabled = true;
+                btn.textContent = 'Sound: ON';
+                btn.classList.add('active');
+            } else {
+                if (webAudio) {
+                    webAudio.stop();
+                }
+                audioEnabled = false;
+                btn.textContent = 'Sound: OFF';
+                btn.classList.remove('active');
+            }
+        };
+
+        // Toggle fullscreen
+        window.toggleFullscreen = function() {
+            const container = document.getElementById('game-container');
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                container.requestFullscreen().catch(err => {
+                    console.log('Fullscreen error:', err);
+                });
+            }
+        };
+
+        // Keyboard shortcut for fullscreen (F11)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F11') {
+                e.preventDefault();
+                toggleFullscreen();
+            }
+        });
+
+        // Start connection when page loads
+        connectVNC();
+    </script>
+</body>
+</html>

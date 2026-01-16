@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOS Games Arcade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-pink: #ff00ff;
+            --neon-cyan: #00ffff;
+            --neon-green: #39ff14;
+            --dark-bg: #0a0a0a;
+            --card-bg: #1a1a2e;
+            --card-hover: #16213e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'VT323', monospace;
+            background: var(--dark-bg);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        /* Scanline effect */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            padding: 3rem 0;
+        }
+
+        h1 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: clamp(1.5rem, 5vw, 3rem);
+            background: linear-gradient(45deg, var(--neon-pink), var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 40px rgba(255, 0, 255, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 20px var(--neon-pink)); }
+            to { filter: drop-shadow(0 0 30px var(--neon-cyan)); }
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: var(--neon-green);
+            letter-spacing: 3px;
+        }
+
+        .random-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+            padding: 1rem 2rem;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.9rem;
+            background: linear-gradient(135deg, var(--neon-pink), var(--neon-cyan));
+            border: none;
+            border-radius: 8px;
+            color: var(--dark-bg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .random-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px var(--neon-pink), 0 0 60px var(--neon-cyan);
+        }
+
+        .random-btn:active {
+            transform: scale(0.98);
+        }
+
+        .random-icon {
+            font-size: 1.2rem;
+            animation: shake 2s ease-in-out infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+        }
+
+        /* Section Headers */
+        .section-header {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.9rem;
+            color: var(--neon-pink);
+            margin: 2rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--card-bg);
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            padding: 1rem 0 2rem;
+        }
+
+        .game-card {
+            background: var(--card-bg);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 2rem;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.1),
+                transparent
+            );
+            transition: left 0.5s ease;
+        }
+
+        .game-card:hover::before {
+            left: 100%;
+        }
+
+        .game-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--neon-cyan);
+            box-shadow:
+                0 0 20px rgba(0, 255, 255, 0.3),
+                0 20px 40px rgba(0, 0, 0, 0.4);
+            background: var(--card-hover);
+        }
+
+        .game-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .game-card h2 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            color: var(--neon-pink);
+        }
+
+        .game-card p {
+            font-size: 1.2rem;
+            color: #888;
+        }
+
+        .play-btn {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        .game-card:hover .play-btn {
+            background: var(--neon-green);
+            color: var(--dark-bg);
+            box-shadow: 0 0 20px var(--neon-green);
+        }
+
+        /* Featured Game Card */
+        .game-card.featured {
+            grid-column: span 2;
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d1f3d 100%);
+            border: 2px solid #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            position: relative;
+        }
+
+        .game-card.featured::after {
+            content: '★ FEATURED';
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #000;
+            padding: 0.3rem 0.8rem;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.5rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .game-card.featured .desktop-badge {
+            display: inline-block;
+            margin-top: 0.5rem;
+            padding: 0.2rem 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #888;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .game-card.featured h2 {
+            color: #ffd700;
+            font-size: 1.2rem;
+        }
+
+        .game-card.featured .play-btn {
+            border-color: #ffd700;
+            color: #ffd700;
+        }
+
+        .game-card.featured:hover {
+            border-color: #ffd700;
+            box-shadow:
+                0 0 30px rgba(255, 215, 0, 0.5),
+                0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .game-card.featured:hover .play-btn {
+            background: #ffd700;
+            color: var(--dark-bg);
+            box-shadow: 0 0 20px #ffd700;
+        }
+
+        @media (max-width: 700px) {
+            .game-card.featured {
+                grid-column: span 1;
+            }
+        }
+
+        .no-games {
+            text-align: center;
+            padding: 4rem;
+            color: #666;
+            font-size: 1.5rem;
+        }
+
+        .no-games code {
+            display: block;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--card-bg);
+            border-radius: 8px;
+            color: var(--neon-green);
+            font-family: 'VT323', monospace;
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem 0;
+            margin-top: 2rem;
+            border-top: 1px solid #333;
+        }
+
+        footer p {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        footer a {
+            color: var(--neon-cyan);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        footer a:hover {
+            color: var(--neon-pink);
+            text-shadow: 0 0 10px var(--neon-pink);
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 600px) {
+            .container {
+                padding: 1rem;
+            }
+
+            header {
+                padding: 2rem 0;
+            }
+
+            .games-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .game-card {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Keyboard navigation focus styles */
+        .game-card:focus {
+            outline: none;
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 30px var(--neon-pink);
+        }
+
+        /* Loading animation for game icons */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .game-card:hover .game-icon {
+            animation: pulse 1s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="scanlines"></div>
+
+    <div class="container">
+        <header>
+            <h1>DOS Games Arcade</h1>
+            <p class="subtitle">[ SELECT YOUR GAME ]</p>
+            <button class="random-btn" id="random-btn" onclick="playRandomGame()">
+                <span class="random-icon">🎲</span> Random Game
+            </button>
+        </header>
+
+        <main>
+            <h2 class="section-header">★ FEATURED GAMES</h2>
+            <div class="games-grid" id="featured-games">
+                <a href="/player-homm3.html" class="game-card featured" tabindex="0" data-type="wine">
+                    <span class="game-icon">⚔️</span>
+                    <h2>Heroes of Might and Magic III</h2>
+                    <p>Classic turn-based strategy RPG</p>
+                    <span class="desktop-badge">🖥️ Desktop Only</span>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+                <a href="/aladdin" class="game-card" tabindex="0">
+                    <span class="game-icon">🧞</span>
+                    <h2>Aladdin</h2>
+                    <p>Disney platformer</p>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+                <a href="/chess" class="game-card" tabindex="0">
+                    <span class="game-icon">♟️</span>
+                    <h2>Chess</h2>
+                    <p>Strategy game</p>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+                <a href="/doom" class="game-card" tabindex="0">
+                    <span class="game-icon">💀</span>
+                    <h2>Doom</h2>
+                    <p>First-person shooter classic</p>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+                <a href="/doomii" class="game-card" tabindex="0">
+                    <span class="game-icon">💀</span>
+                    <h2>Doom II</h2>
+                    <p>Hell on Earth</p>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+                <a href="/duke3d" class="game-card" tabindex="0">
+                    <span class="game-icon">💣</span>
+                    <h2>Duke Nukem 3D</h2>
+                    <p>Action shooter</p>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+                <a href="/earthwormjim" class="game-card" tabindex="0">
+                    <span class="game-icon">🎮</span>
+                    <h2>Earthworm Jim</h2>
+                    <p>Crazy platform shooter</p>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+                <a href="/goldenaxe" class="game-card" tabindex="0">
+                    <span class="game-icon">🎮</span>
+                    <h2>Golden Axe</h2>
+                    <p>Best arcade game ever</p>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+                <a href="/gta" class="game-card" tabindex="0">
+                    <span class="game-icon">🚗</span>
+                    <h2>Grand Theft Auto</h2>
+                    <p>Action adventure</p>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+                <a href="/junglebook" class="game-card" tabindex="0">
+                    <span class="game-icon">🎮</span>
+                    <h2>The Jungle Book</h2>
+                    <p>Classic Disney</p>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+                <a href="/lemmings" class="game-card" tabindex="0">
+                    <span class="game-icon">🐹</span>
+                    <h2>Lemmings</h2>
+                    <p>Puzzle game</p>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+                <a href="/lionking" class="game-card" tabindex="0">
+                    <span class="game-icon">🦁</span>
+                    <h2>The Lion King</h2>
+                    <p>Disney platformer</p>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+                <a href="/lostvikings" class="game-card" tabindex="0">
+                    <span class="game-icon">🎮</span>
+                    <h2>The Lost Vikings</h2>
+                    <p>Puzzle platformer</p>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+                <a href="/mortalkombat" class="game-card" tabindex="0">
+                    <span class="game-icon">🥋</span>
+                    <h2>Mortal Kombat</h2>
+                    <p>Fighting game</p>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+                <a href="/pacman" class="game-card" tabindex="0">
+                    <span class="game-icon">👻</span>
+                    <h2>Pac-Man</h2>
+                    <p>Arcade classic</p>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+                <a href="/princeofpersia" class="game-card" tabindex="0">
+                    <span class="game-icon">🗡️</span>
+                    <h2>Prince of Persia</h2>
+                    <p>Action platformer</p>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+                <a href="/redalert" class="game-card" tabindex="0">
+                    <span class="game-icon">☢️</span>
+                    <h2>Red Alert</h2>
+                    <p>Real-time strategy</p>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+                <a href="/spaceinvaders" class="game-card" tabindex="0">
+                    <span class="game-icon">👾</span>
+                    <h2>Space Invaders</h2>
+                    <p>Arcade shooter</p>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+                <a href="/wolfenstein" class="game-card" tabindex="0">
+                    <span class="game-icon">🔫</span>
+                    <h2>Wolfenstein 3D</h2>
+                    <p>First-person shooter</p>
+                    <span class="play-btn">► Play Now</span>
+                </a>
+            </div>
+        </main>
+
+        <footer>
+            <p>Built with ❤️ by <a href="https://www.linkedin.com/in/yaronka/" target="_blank" rel="noopener">Yaron K.</a></p>
+            <p>Source code on <a href="https://github.com/legojesus/dos-games-in-browser-docker" target="_blank" rel="noopener">GitHub</a></p>
+            <p style="margin-top: 1rem; font-size: 1rem;">Powered by <a href="https://js-dos.com/" target="_blank" rel="noopener">js-dos</a></p>
+        </footer>
+    </div>
+
+    <script>
+        // Add keyboard navigation to game cards
+        document.addEventListener('keydown', (e) => {
+            if (e.target.classList.contains('game-card')) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.target.click();
+                }
+            }
+        });
+
+        // Random Game function - picks a random DOS game from featured games
+        function playRandomGame() {
+            const gameCards = document.querySelectorAll('#featured-games .game-card:not([data-type="wine"])');
+            if (gameCards.length === 0) {
+                alert('No games available!');
+                return;
+            }
+            const randomIndex = Math.floor(Math.random() * gameCards.length);
+            const randomGame = gameCards[randomIndex];
+            window.location.href = randomGame.href;
+        }
+    </script>
+</body>
+</html>

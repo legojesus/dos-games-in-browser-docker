@@ -1,0 +1,30 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+LICENSE
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules (will be installed in container)
+node_modules
+npm-debug.log
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+
+# Other deployment folders
+HoMM3/
+RoundRobin/
+Website/

@@ -1,27 +1,116 @@
-# Running old dos games in your browser via docker
-This repo contains code to build many old dos games in a JavaScript dos emulator, containerized in Docker, to run games in your browser!
+# DOS Games Arcade
 
-### Requirements: 
- - NodeJS (NPM, NPX)
- - Docker (and Docker Compose)
+A retro-themed web portal for playing classic DOS games and Heroes of Might and Magic III directly in your browser.
+A live version of this deployment is available at https://yaron.today
 
-### How to build a single game deployment:
-1. Run the bash script "create_game.sh" which will run the `create-dosbox@latest` package. 
-2. The package will ask you to enter an old game's name. Type in any old game you want (e.g. "doom") and hit Enter.
-3. It will show you a list of possible results (if any). Select the relevant game you want with the arrow keys and hit Enter. 
-4. A new folder named "app" will be created with the emulator and the game, afterwwhich the script will perform `npm install` in it. Wait for it to finish.
-5. In your terminal, run "docker compose up". It will build a docker image that contains the emulator and the game, and will expose it on port 80.
-6. Open your browser and type in your localhost address in the address bar (127.0.0.1) and see if the game loads up. Alternatively, you can type in your machine's internal IP from any other device on your local network and load the game from there (works on phones too!). 
-7. (Optional) tag the docker image and push it to dockerhub or your desired image registry and deploy it anywhere (cloud providers, K8s etc). 
+## Features
 
-For multiple games deployments check out the "website" and "round robin" folders and their READMEs. 
+- **DOS Games**: Play classic DOS games via js-dos emulator
+- **Heroes of Might and Magic III**: Full Windows game running via Wine/VNC
+- **Random Game Button**: Instantly launch a random DOS game
+- **Retro UI**: Beautiful CRT/arcade aesthetic with neon colors
 
+## Requirements
 
-## Additional info
-I came up with this project idea because I wanted to be able to deploy and play old games in my browser (via PC or phone) at any time, anywhere, so this project was the perfect fit.
-It was extremely educational and a bit challenging at times, improving my NodeJS and Docker skills. I ended up deploying "Doom" containers and other games on a multi-node K8s cluster on Google Cloud Platform, then added load balancers that pointed to my website's domain which was really fun :)
+- Docker and Docker Compose
+- Node.js 16+ (for adding DOS games)
 
-Many thanks and credits to the js-dos project (https://js-dos.com/v7/build/docs/) that made this a lot easier than it should have been! If you like this project, please donate to js-dos to help them maintain this wonderful browser-based emulator!
+## Quick Start
 
-  
- 
+After cloning, you need to add games (game files are not included in the repo):
+
+```bash
+# Add your first game
+./create_game.sh
+# Enter a game name like: doom, princeofpersia, lionking
+
+# Build and run
+docker compose up --build
+```
+
+Open http://localhost to access the arcade.
+
+## Adding DOS Games
+
+```bash
+# Add a new game
+./create_game.sh
+# Enter a game name like: doom, princeofpersia, lionking
+
+# Rebuild
+docker compose up --build
+```
+
+Popular games that work: doom, doomii, princeofpersia, lionking, aladdin, duke3d, wolfenstein, quake, lemmings, pacman, and many more.
+
+## Removing Games
+
+```bash
+# Remove a game
+./delete_game.sh
+# Select the game to remove
+
+# Rebuild
+docker compose up --build
+```
+
+## Syncing Configuration
+
+If you manually add/remove game folders, run:
+
+```bash
+./sync_games.sh
+```
+
+This regenerates `docker-compose.yml`, `nginx/nginx.conf`, and `nginx/index.html`.
+
+## Project Structure
+
+```
+.
+├── docker-compose.yml     # Generated - all services
+├── create_game.sh         # Add new DOS games
+├── delete_game.sh         # Remove games
+├── sync_games.sh          # Regenerate configs
+├── nginx/                 # Web server
+│   ├── index.html         # Game portal (generated)
+│   ├── player.html        # DOS game player
+│   └── player-homm3.html  # HoMM3 player (noVNC)
+├── homm3/                 # HoMM3 (Wine/VNC)
+│   └── HoMM3/             # Game files go here
+└── [game folders]/        # Created by create_game.sh
+```
+
+## Heroes of Might and Magic III
+
+HoMM3 runs via Wine in a container with VNC streaming. To set it up:
+
+1. Place your HoMM3 game files in `homm3/HoMM3/`
+2. Run `docker compose up --build`
+3. Wait 10-20 seconds for Wine to initialize
+4. Click the game in the portal to play
+
+**Note**: HoMM3 requires a desktop browser (mouse/keyboard). Mobile devices will see a "Desktop Only" message.
+
+**Audio**: Click the "Sound: OFF" button to enable audio streaming. For best audio quality, use HTTPS.
+
+## Deployment
+
+For production deployment with HTTPS:
+
+```bash
+# Change Docker to use internal port
+# In docker-compose.yml, change nginx ports to "8080:80"
+
+# Install and run Caddy for automatic HTTPS
+sudo snap install caddy
+sudo caddy reverse-proxy --from yourdomain.com --to localhost:8080
+```
+
+## Customization
+
+Edit `nginx/index.html` to customize colors, fonts, and layout. Changes will be overwritten when running `sync_games.sh` - either modify the script or make changes after syncing.
+
+## License
+
+MIT
