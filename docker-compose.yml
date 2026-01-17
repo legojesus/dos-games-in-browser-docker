@@ -59,6 +59,14 @@ services:
       - ./homm3/HoMM3/Games:/home/heroes/.wine/drive_c/Program Files (x86)/3DO/Heroes III Demo/Games
     restart: unless-stopped
 
+  manager:
+    build:
+      context: ./manager
+      dockerfile: Dockerfile
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
   junglebook:
     build:
       context: ./junglebook
@@ -124,7 +132,7 @@ services:
       context: ./nginx
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "8080:80"
     restart: unless-stopped
     depends_on:
       - aladdin
@@ -140,6 +148,7 @@ services:
       - lemmings
       - lionking
       - lostvikings
+      - manager
       - mortalkombat
       - pacman
       - princeofpersia

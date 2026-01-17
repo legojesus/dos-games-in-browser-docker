@@ -129,7 +129,7 @@
             gap: 0.5rem;
         }
 
-        .fullscreen-btn, .sound-btn {
+        .fullscreen-btn, .sound-btn, .restart-btn {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
@@ -144,10 +144,31 @@
             cursor: pointer;
         }
 
-        .fullscreen-btn:hover, .sound-btn:hover {
+        .fullscreen-btn:hover, .sound-btn:hover, .restart-btn:hover {
             background: var(--neon-green);
             color: var(--dark-bg);
             box-shadow: 0 0 20px var(--neon-green);
+        }
+
+        .restart-btn {
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+        }
+
+        .restart-btn:hover {
+            background: var(--neon-pink);
+            box-shadow: 0 0 20px var(--neon-pink);
+        }
+
+        .restart-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .restart-btn:disabled:hover {
+            background: transparent;
+            color: var(--neon-pink);
+            box-shadow: none;
         }
 
         .sound-btn.active {
@@ -234,6 +255,7 @@
             <div class="header-controls">
                 <button class="sound-btn" id="sound-btn" onclick="toggleSound()">Sound: OFF</button>
                 <button class="fullscreen-btn" onclick="toggleFullscreen()">Fullscreen</button>
+                <button class="restart-btn" id="restart-btn" onclick="restartGame()">Restart</button>
             </div>
         </div>
         <div id="game-container">
@@ -591,6 +613,54 @@
                 container.requestFullscreen().catch(err => {
                     console.log('Fullscreen error:', err);
                 });
+            }
+        };
+
+        // Restart game container
+        window.restartGame = async function() {
+            const btn = document.getElementById('restart-btn');
+            const originalText = btn.textContent;
+
+            if (!confirm('Restart the game? This will disconnect your current session.')) {
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Restarting...';
+
+            try {
+                const response = await fetch('/api/restart/homm3', {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    btn.textContent = 'Restarted!';
+                    // Show loading state and reconnect
+                    document.getElementById('vnc-screen').style.display = 'none';
+                    document.getElementById('loading').style.display = 'flex';
+                    document.querySelector('.loading-text').textContent = 'Game restarting...';
+
+                    // Wait for container to restart then reconnect
+                    setTimeout(() => {
+                        document.querySelector('.loading-text').textContent = 'Reconnecting...';
+                        if (rfb) {
+                            rfb.disconnect();
+                        }
+                        connectVNC();
+                        btn.textContent = originalText;
+                        btn.disabled = false;
+                    }, 5000);
+                } else {
+                    const data = await response.json();
+                    alert('Failed to restart: ' + (data.error || 'Unknown error'));
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                console.error('Restart error:', err);
+                alert('Failed to restart: ' + err.message);
+                btn.textContent = originalText;
+                btn.disabled = false;
             }
         };
 
