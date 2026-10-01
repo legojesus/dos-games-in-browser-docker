@@ -121,7 +121,7 @@ EOF
       context: ./nginx
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "${HOST_PORT:-80}:80"
     restart: unless-stopped
 EOF
 
