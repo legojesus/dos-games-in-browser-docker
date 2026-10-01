@@ -132,7 +132,7 @@ services:
       context: ./nginx
       dockerfile: Dockerfile
     ports:
-      - "8080:80"
+      - "${HOST_PORT:-80}:80"
     restart: unless-stopped
     depends_on:
       - aladdin
